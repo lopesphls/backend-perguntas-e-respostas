@@ -1,0 +1,1 @@
+Projeto de backend para prática de NodeJs, onde o objetivo é criar uma pequena aplicação de perguntas e respostas
