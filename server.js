@@ -2,7 +2,8 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const connection = require("./database/database");
-const Question = require('./database/question')
+const Question = require('./database/question');
+const Answer = require('./database/Answer');
 
 
 connection
@@ -23,16 +24,43 @@ app.use(bodyParser.json());
 app.get("/",(req, res) => {
     Question.findAll({ raw: true , order: [
         ['id', 'DESC'] // ASC = Crescente e DESC = decrescente
-    ]}).then( perguntas => {
+    ]}).then( answer => {
         res.render("index", {
-            perguntas
+            answer
         });
     })
 });
 
-app.get("/perguntar", (req, res) => {
-    res.render("perguntar");
+app.get("/question", (req, res) => {
+    res.render("question");
 });
+
+app.get("/answer/:id", (req, res) => {
+    const id = req.params.id;
+    Question.findOne({
+        where: { id }
+    }).then(question => {
+        if(question != undefined){
+
+            Answer.findAll({
+                where: {questionId:question.id},
+                order: [
+                    ['id', 'DESC']
+                ]
+            })
+            .then(answer => {
+                res.render("answer", {
+                    question,
+                    answer
+                });
+
+            });
+
+        } else{
+            res.redirect("/");
+        }
+    })
+}); 
 
 app.post("/savequestion",(req, res) => {
     const titulo = req.body.titulo;
@@ -44,7 +72,20 @@ app.post("/savequestion",(req, res) => {
     .then(() => {
         res.redirect('/');
     });
-})
+});
+
+app.post("/answered", (req, res) => {
+    const corpo = req.body.corpo;
+    const questionId =  req.body.question;
+    Answer.create({
+        corpo,
+        questionId,
+    })
+    .then(() => {
+        res.redirect(`/answer/${questionId}`);
+    });
+});
+
 
 app.listen(3000,()=>{
     console.log("App rodando!");
